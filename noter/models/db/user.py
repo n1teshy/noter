@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 import noter.utils.constants as c
 from noter.models.db.meta import BaseModel
@@ -17,6 +17,8 @@ class User(BaseModel):
         nullable=False, unique=True, index=True
     )
     passwd_hash: Mapped[str] = mapped_column(nullable=False)
+
+    notes = relationship("Note", back_populates="author", lazy="selectin")
 
     @staticmethod
     def from_data(data: dict) -> "User":

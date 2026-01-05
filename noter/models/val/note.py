@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import noter.utils.constants as c
 from noter.models.db.note import Note as NoteModel
 from noter.models.val.meta import TimestampedJSON
+from noter.models.val.user import UserJSON
 
 
 class NoteBase(BaseModel):
@@ -17,6 +18,11 @@ class NoteBase(BaseModel):
         default_factory=list,
         description="A list of tags associated with the note",
     )
+    is_public: bool = Field(
+        description="Whether the note is public or private", alias="isPublic"
+    )
+
+    model_config = ConfigDict(populate_by_name=False)
 
 
 class NoteCreate(NoteBase):
@@ -24,7 +30,7 @@ class NoteCreate(NoteBase):
 
 
 class NoteJSON(TimestampedJSON, NoteBase):
-    pass
+    author: UserJSON
 
 
 async def ensure_constraints(

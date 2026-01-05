@@ -18,8 +18,14 @@ COL_CREATED_AT = "created_at"
 FLD_UPDATED_AT = "updatedAt"
 COL_UPDATED_AT = "updated_at"
 
+FLD_AUTHOR = "author"
+
 # --- user fields/columns ---
 COL_PASSWD_HASH = "passwd_hash"
+
+# --- note fields/columns ---
+FLD_IS_PUBLIC = "isPublic"
+COL_IS_PUBLIC = "is_public"
 
 # --- fastapi field names ---
 FA_FLD_BODY = "body"
