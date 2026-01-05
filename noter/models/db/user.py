@@ -5,7 +5,7 @@ from noter.models.db.meta import BaseModel
 
 
 class User(BaseModel):
-    __tablename__ = c.TBL_NOTES
+    __tablename__ = c.TBL_USERS
     basic_json_map = {
         **{wd: wd for wd in [c.WORD_ID, c.WORD_USERNAME]},
         c.FLD_CREATED_AT: lambda user: user.created_at.isoformat(),
