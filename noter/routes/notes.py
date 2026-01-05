@@ -29,8 +29,8 @@ async def get_notes(
         stmt = stmt.where(Note.is_public.is_(True))
     else:
         stmt = stmt.where(Note.author_id == user.id)
-    notes = await session.execute(stmt)
-    return [note.to_json() for note in notes.scalars().all()]
+    notes = (await session.execute(stmt)).scalars().all()
+    return [note.to_json() for note in notes]
 
 
 @router.post("/", response_model=NoteJSON)
