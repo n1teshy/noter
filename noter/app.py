@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 import noter.utils.constants as c
 from noter.models.db.meta import BaseModel, engine
 from noter.routes.auth import router as auth_router
+from noter.routes.folders import router as folders_router
 from noter.routes.notes import router as notes_router
 
 
@@ -16,8 +17,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(auth_router, prefix="/auth", tags=["auth"])
+app.include_router(folders_router, prefix="/folders", tags=["folders"])
 app.include_router(notes_router, prefix="/notes", tags=["notes"])
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
 
 
 @app.exception_handler(RequestValidationError)

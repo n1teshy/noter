@@ -18,6 +18,7 @@ class User(BaseModel):
     )
     passwd_hash: Mapped[str] = mapped_column(nullable=False)
 
+    folders = relationship("Folder", back_populates="author", lazy="selectin")
     notes = relationship("Note", back_populates="author", lazy="selectin")
 
     @staticmethod

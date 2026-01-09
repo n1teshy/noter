@@ -1,5 +1,6 @@
 # --- general words ---
 WORD_ID = "id"
+WORD_NAME = "name"
 WORD_TITLE = "title"
 WORD_CONTENT = "content"
 WORD_TAGS = "tags"
@@ -8,8 +9,10 @@ WORD_USERNAME = "username"
 WORD_MESSAGE = "message"
 
 # --- table names ---
+TBL_FOLDERS = "folders"
 TBL_NOTES = "notes"
 TBL_USERS = "users"
+TBL_FOLDER_NOTES = "folder_notes"
 
 # --- general fields/columns ---
 FLD_CREATED_AT = "createdAt"
@@ -18,6 +21,7 @@ COL_CREATED_AT = "created_at"
 FLD_UPDATED_AT = "updatedAt"
 COL_UPDATED_AT = "updated_at"
 
+COL_AUHTOR_ID = "author_id"
 FLD_AUTHOR = "author"
 
 # --- user fields/columns ---
