@@ -22,7 +22,7 @@ def upgrade() -> None:
     op.create_table(
         "folders",
         sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
-        sa.Column("name", sa.String, nullable=False, unique=True, index=True),
+        sa.Column("name", sa.String, nullable=False, index=True),
         sa.Column(
             "author_id",
             sa.Integer(),
