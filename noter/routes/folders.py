@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
-from sqlalchemy import and_, exists, insert, select
+from sqlalchemy import exists, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -12,6 +12,7 @@ from noter.models.val.folder import (
     FolderCreate,
     FolderJSON,
     ensure_constraints,
+    owns_folder,
 )
 from noter.models.val.note import NoteJSON
 from noter.utils.auth import AuthUser, require_auth
@@ -64,15 +65,7 @@ async def get_notes_from_folder(
     session: AsyncSession = Depends(get_session),
     user: AuthUser = Depends(require_auth),
 ):
-    owns = (
-        await session.execute(
-            select(
-                exists().where(
-                    Folder.author_id == user.id, Folder.id == folder_id
-                )
-            )
-        )
-    ).scalar()
+    owns = await owns_folder(session, user.id, folder_id)
     if not owns:
         raise HTTPException(status_code=403)
 
@@ -100,21 +93,7 @@ async def add_note_to_folder(
     session: AsyncSession = Depends(get_session),
     user: AuthUser = Depends(require_auth),
 ):
-    owns = (
-        await session.execute(
-            select(
-                exists().where(
-                    and_(
-                        Folder.id == folder_id,
-                        Folder.author_id == user.id,
-                        exists().where(
-                            Note.id == note_id, Note.author_id == user.id
-                        ),
-                    )
-                )
-            )
-        )
-    ).scalar()
+    owns = await owns_folder(session, user.id, folder_id)
     if not owns:
         raise HTTPException(status_code=403)
 
@@ -127,7 +106,7 @@ async def add_note_to_folder(
                 )
             )
         )
-    ).scalar()
+    ).scalar_one()
 
     if link_exists:
         raise HTTPException(

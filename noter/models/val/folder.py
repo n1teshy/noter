@@ -48,3 +48,19 @@ async def ensure_constraints(
                 }
             ]
         )
+
+
+async def owns_folder(
+    session: AsyncSession, user_id: int, folder_id: int
+) -> bool:
+    owns = (
+        await session.execute(
+            select(
+                exists().where(
+                    FolderModel.author_id == user_id,
+                    FolderModel.id == folder_id,
+                )
+            )
+        )
+    ).scalar_one()
+    return owns
