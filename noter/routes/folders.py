@@ -59,7 +59,7 @@ async def add_folder(
     return folder.to_json()
 
 
-@router.get("/{folder_id}", response_model=FolderJSON)
+@router.get("/{folder_id}/", response_model=FolderJSON)
 async def get_folder(
     folder_id: int,
     session: AsyncSession = Depends(get_session),
@@ -75,7 +75,7 @@ async def get_folder(
     return folder.to_json()
 
 
-@router.put("/{folder_id}", response_model=FolderJSON)
+@router.put("/{folder_id}/", response_model=FolderJSON)
 async def update_folder(
     folder_id: int,
     data: FolderCreate,
@@ -95,7 +95,7 @@ async def update_folder(
     return folder.to_json()
 
 
-@router.delete("/{folder_id}", response_model=FolderJSON)
+@router.delete("/{folder_id}/", response_model=FolderJSON)
 async def delete_folder(
     folder_id: int,
     session: AsyncSession = Depends(get_session),
@@ -134,7 +134,7 @@ async def get_notes_from_folder(
     return [note.to_json() for note in notes]
 
 
-@router.post("/{folder_id}/notes/{note_id}")
+@router.post("/{folder_id}/notes/{note_id}/")
 async def add_note_to_folder(
     folder_id: int,
     note_id: int,
