@@ -9,13 +9,13 @@ FolderNote = Table(
     Column(
         "folder_id",
         Integer,
-        ForeignKey(f"{c.TBL_FOLDERS}.{c.WORD_ID}"),
+        ForeignKey(f"{c.TBL_FOLDERS}.{c.WORD_ID}", ondelete="CASCADE"),
         primary_key=True,
     ),
     Column(
         "note_id",
         Integer,
-        ForeignKey(f"{c.TBL_NOTES}.{c.WORD_ID}"),
+        ForeignKey(f"{c.TBL_NOTES}.{c.WORD_ID}", ondelete="CASCADE"),
         primary_key=True,
     ),
 )
