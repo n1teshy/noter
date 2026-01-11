@@ -32,14 +32,12 @@ async def ensure_constraints(
 ) -> None:
     stmt = select(
         exists().where(
-            FolderModel.name == folder.name, FolderModel.author_id == user_id
+            FolderModel.name == folder.name,
+            FolderModel.author_id == user_id,
+            True if id is None else FolderModel.id != id,
         )
     )
-    if id is not None:
-        stmt = stmt.where(FolderModel.id != id)
-
-    invalid = (await session.execute(stmt)).scalar()
-    if invalid:
+    if await session.scalar(stmt):
         raise RequestValidationError(
             errors=[
                 {
@@ -53,8 +51,7 @@ async def ensure_constraints(
 
 async def ensure_exists(session: AsyncSession, id: int):
     stmt = select(exists().where(FolderModel.id == id))
-    folder_exists = (await session.execute(stmt)).scalar_one()
-    if not folder_exists:
+    if not await session.scalar(stmt):
         raise AppException(
             status=404, payload={c.WORD_MESSAGE: "Folder doesn't exist"}
         )
@@ -63,15 +60,11 @@ async def ensure_exists(session: AsyncSession, id: int):
 async def ensure_ownership(
     session: AsyncSession, user_id: int, folder_id: int
 ) -> bool:
-    owns = (
-        await session.execute(
-            select(
-                exists().where(
-                    FolderModel.author_id == user_id,
-                    FolderModel.id == folder_id,
-                )
-            )
+    stmt = select(
+        exists().where(
+            FolderModel.author_id == user_id,
+            FolderModel.id == folder_id,
         )
-    ).scalar_one()
-    if not owns:
+    )
+    if not session.scalar(stmt):
         raise AppException(status=403)

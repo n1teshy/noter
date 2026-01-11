@@ -105,6 +105,7 @@ async def delete_folder(
     await ensure_ownership(session, user.id, folder_id)
     stmt = delete(Folder).where(Folder.id == folder_id)
     await session.execute(stmt)
+    await session.commit()
     return Response(status_code=200)
 
 
