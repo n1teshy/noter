@@ -45,3 +45,7 @@ class Note(BaseModel):
     @staticmethod
     def from_data(data: dict, author_id: int) -> "Note":
         return Note(**data, author_id=author_id)
+
+    def update(self, data: dict):
+        for key, val in data.items():
+            setattr(self, key, val)

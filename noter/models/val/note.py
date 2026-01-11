@@ -2,13 +2,14 @@ from typing import Optional
 
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import exists, select
+from sqlalchemy import exists, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import noter.utils.constants as c
 from noter.models.db.note import Note as NoteModel
 from noter.models.val.meta import TimestampedJSON
 from noter.models.val.user import UserJSON
+from noter.utils.exceptions import AppException
 
 
 class NoteBase(BaseModel):
@@ -41,14 +42,12 @@ async def ensure_constraints(
 ) -> None:
     stmt = select(
         exists().where(
-            NoteModel.title == note.title, NoteModel.author_id == user_id
+            NoteModel.title == note.title,
+            NoteModel.author_id == user_id,
+            True if id is None else NoteModel.id != id,
         )
     )
-    if id is not None:
-        stmt = stmt.where(NoteModel.id != id)
-
-    invalid = (await session.execute(stmt)).scalar()
-    if invalid:
+    if await session.scalar(stmt):
         raise RequestValidationError(
             errors=[
                 {
@@ -58,3 +57,37 @@ async def ensure_constraints(
                 }
             ]
         )
+
+
+async def ensure_exists(session: AsyncSession, id: int):
+    stmt = select(exists().where(NoteModel.id == id))
+    if not await session.scalar(stmt):
+        raise AppException(
+            status=404, payload={c.WORD_MESSAGE: "Note doesn't exist"}
+        )
+
+
+async def ensure_viewership(
+    session: AsyncSession, user_id: int, note_id: int
+) -> bool:
+    stmt = select(
+        exists().where(
+            NoteModel.id == note_id,
+            or_(NoteModel.is_public.is_(True), NoteModel.author_id == user_id),
+        )
+    )
+    if not session.scalar(stmt):
+        raise AppException(status=403)
+
+
+async def ensure_ownership(
+    session: AsyncSession, user_id: int, note_id: int
+) -> bool:
+    stmt = select(
+        exists().where(
+            NoteModel.author_id == user_id,
+            NoteModel.id == note_id,
+        )
+    )
+    if not await session.scalar(stmt):
+        raise AppException(status=403)

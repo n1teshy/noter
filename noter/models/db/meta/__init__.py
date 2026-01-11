@@ -48,8 +48,7 @@ async def get_session():
     async with SessionLocal() as session:
         try:
             yield session
-            if session.new or session.dirty or session.deleted:
-                await session.commit()
+            await session.commit()
         except Exception:
             await session.rollback()
             raise
