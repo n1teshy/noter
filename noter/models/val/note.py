@@ -34,9 +34,16 @@ class NoteJSON(TimestampedJSON, NoteBase):
 
 
 async def ensure_constraints(
-    note: NoteCreate, session: AsyncSession, id: Optional[int] = None
+    note: NoteCreate,
+    session: AsyncSession,
+    user_id: int,
+    id: Optional[int] = None,
 ) -> None:
-    stmt = select(exists().where(NoteModel.title == note.title))
+    stmt = select(
+        exists().where(
+            NoteModel.title == note.title, NoteModel.author_id == user_id
+        )
+    )
     if id is not None:
         stmt = stmt.where(NoteModel.id != id)
 

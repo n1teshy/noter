@@ -39,7 +39,7 @@ async def add_note(
     session: AsyncSession = Depends(get_session),
     user: AuthUser = Depends(require_auth),
 ):
-    await ensure_constraints(data, session)
+    await ensure_constraints(data, session, user.id)
     note = Note.from_data(data.model_dump(), author_id=user.id)
     session.add(note)
     await session.commit()

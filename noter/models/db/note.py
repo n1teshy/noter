@@ -1,4 +1,4 @@
-from sqlalchemy import ARRAY, Boolean, ForeignKey, String
+from sqlalchemy import ARRAY, Boolean, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 import noter.utils.constants as c
@@ -7,6 +7,13 @@ from noter.models.db.meta import BaseModel
 
 class Note(BaseModel):
     __tablename__ = c.TBL_NOTES
+    __table_args__ = (
+        UniqueConstraint(
+            c.COL_AUHTOR_ID,
+            c.WORD_TITLE,
+            name="uq_note_title_author",
+        ),
+    )
     basic_json_map = {
         **{
             wd: wd
@@ -19,7 +26,7 @@ class Note(BaseModel):
     }
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    title: Mapped[str] = mapped_column(nullable=False, unique=True, index=True)
+    title: Mapped[str] = mapped_column(nullable=False, index=True)
     content: Mapped[str] = mapped_column(nullable=False)
     tags: Mapped[list[str]] = mapped_column(
         ARRAY(String),
