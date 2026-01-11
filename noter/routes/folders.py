@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Response
-from sqlalchemy import exists, insert, select
+from sqlalchemy import delete, exists, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -12,7 +12,8 @@ from noter.models.val.folder import (
     FolderCreate,
     FolderJSON,
     ensure_constraints,
-    owns_folder,
+    ensure_exists,
+    ensure_ownership,
 )
 from noter.models.val.note import NoteJSON
 from noter.utils.auth import AuthUser, require_auth
@@ -58,6 +59,55 @@ async def add_folder(
     return folder.to_json()
 
 
+@router.get("/{folder_id}", response_model=FolderJSON)
+async def get_folder(
+    folder_id: int,
+    session: AsyncSession = Depends(get_session),
+    user: AuthUser = Depends(require_auth),
+):
+    await ensure_exists(session, folder_id)
+    await ensure_ownership(session, user.id, folder_id)
+    folder: Folder = await session.get(
+        Folder,
+        folder_id,
+        options=(selectinload(Folder.author),),
+    )
+    return folder.to_json()
+
+
+@router.put("/{folder_id}", response_model=FolderJSON)
+async def update_folder(
+    folder_id: int,
+    data: FolderCreate,
+    session: AsyncSession = Depends(get_session),
+    user: AuthUser = Depends(require_auth),
+):
+    await ensure_exists(session, folder_id)
+    await ensure_ownership(session, user.id, folder_id)
+    await ensure_constraints(data, session, user.id, folder_id)
+    folder: Folder = await session.get(
+        Folder,
+        folder_id,
+        options=(selectinload(Folder.author),),
+    )
+    folder.update(data.model_dump())
+    await session.commit()
+    return folder.to_json()
+
+
+@router.delete("/{folder_id}", response_model=FolderJSON)
+async def delete_folder(
+    folder_id: int,
+    session: AsyncSession = Depends(get_session),
+    user: AuthUser = Depends(require_auth),
+):
+    await ensure_exists(session, folder_id)
+    await ensure_ownership(session, user.id, folder_id)
+    stmt = delete(Folder).where(Folder.id == folder_id)
+    await session.execute(stmt)
+    return Response(status_code=200)
+
+
 @router.get("/{folder_id}/notes/", response_model=list[NoteJSON])
 async def get_notes_from_folder(
     folder_id: int,
@@ -66,10 +116,7 @@ async def get_notes_from_folder(
     session: AsyncSession = Depends(get_session),
     user: AuthUser = Depends(require_auth),
 ):
-    owns = await owns_folder(session, user.id, folder_id)
-    if not owns:
-        raise AppException(status=403)
-
+    await ensure_ownership(session, user.id, folder_id)
     notes = (
         (
             await session.execute(
@@ -94,10 +141,7 @@ async def add_note_to_folder(
     session: AsyncSession = Depends(get_session),
     user: AuthUser = Depends(require_auth),
 ):
-    owns = await owns_folder(session, user.id, folder_id)
-    if not owns:
-        raise AppException(status=403)
-
+    await ensure_constraints(session, user.id, folder_id)
     link_exists = (
         await session.execute(
             select(
@@ -108,7 +152,6 @@ async def add_note_to_folder(
             )
         )
     ).scalar_one()
-
     if link_exists:
         raise AppException(
             status=409,

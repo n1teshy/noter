@@ -9,6 +9,7 @@ import noter.utils.constants as c
 from noter.models.db.folder import Folder as FolderModel
 from noter.models.val.meta import TimestampedJSON
 from noter.models.val.user import UserJSON
+from noter.utils.exceptions import AppException
 
 
 class FolderBase(BaseModel):
@@ -50,7 +51,16 @@ async def ensure_constraints(
         )
 
 
-async def owns_folder(
+async def ensure_exists(session: AsyncSession, id: int):
+    stmt = select(exists().where(FolderModel.id == id))
+    folder_exists = (await session.execute(stmt)).scalar_one()
+    if not folder_exists:
+        raise AppException(
+            status=404, payload={c.WORD_MESSAGE: "Folder doesn't exist"}
+        )
+
+
+async def ensure_ownership(
     session: AsyncSession, user_id: int, folder_id: int
 ) -> bool:
     owns = (
@@ -63,4 +73,5 @@ async def owns_folder(
             )
         )
     ).scalar_one()
-    return owns
+    if not owns:
+        raise AppException(status=403)
