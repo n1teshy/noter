@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
@@ -7,6 +7,7 @@ from noter.models.db.meta import BaseModel, engine
 from noter.routes.auth import router as auth_router
 from noter.routes.folders import router as folders_router
 from noter.routes.notes import router as notes_router
+from noter.utils.exceptions import AppException
 
 
 async def lifespan(app: FastAPI):
@@ -34,3 +35,10 @@ async def format_val_errors(req: Request, exc: RequestValidationError):
             for e in exc.errors()
         ],
     )
+
+
+@app.exception_handler(AppException)
+async def handle_app_exception(req: Request, exc: AppException):
+    if exc.payload is None:
+        return Response(status_code=exc.status)
+    return JSONResponse(status_code=exc.status, content=exc.payload)

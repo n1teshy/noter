@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy import exists, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -16,6 +16,7 @@ from noter.models.val.folder import (
 )
 from noter.models.val.note import NoteJSON
 from noter.utils.auth import AuthUser, require_auth
+from noter.utils.exceptions import AppException
 
 router = APIRouter()
 
@@ -67,7 +68,7 @@ async def get_notes_from_folder(
 ):
     owns = await owns_folder(session, user.id, folder_id)
     if not owns:
-        raise HTTPException(status_code=403)
+        raise AppException(status=403)
 
     notes = (
         (
@@ -95,7 +96,7 @@ async def add_note_to_folder(
 ):
     owns = await owns_folder(session, user.id, folder_id)
     if not owns:
-        raise HTTPException(status_code=403)
+        raise AppException(status=403)
 
     link_exists = (
         await session.execute(
@@ -109,9 +110,9 @@ async def add_note_to_folder(
     ).scalar_one()
 
     if link_exists:
-        raise HTTPException(
-            status_code=409,
-            detail={c.WORD_MESSAGE: "Note is already in folder"},
+        raise AppException(
+            status=409,
+            payload={c.WORD_MESSAGE: "Note is already in folder"},
         )
 
     stmt = insert(FolderNote).values(folder_id=folder_id, note_id=note_id)

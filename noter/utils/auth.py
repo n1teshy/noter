@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta, timezone
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
 import noter.utils.environ as env
+from noter.utils.exceptions import AppException
 
 pwd_context = CryptContext(
     schemes=["argon2"],
@@ -42,7 +43,7 @@ def verify_token(token: str) -> dict:
         )
         return payload
     except JWTError:
-        raise HTTPException(status_code=401)
+        raise AppException(status=401)
 
 
 async def require_auth(token: str = Depends(oauth_scheme)) -> AuthUser:

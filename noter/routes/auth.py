@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,6 +7,7 @@ from noter.models.db.meta import get_session
 from noter.models.db.user import User
 from noter.models.val.user import UserCreate, ensure_constraints
 from noter.utils.auth import create_token, hash_password, verify_password
+from noter.utils.exceptions import AppException
 
 router = APIRouter()
 
@@ -37,8 +38,8 @@ async def sign_in(
     stmt = select(User).where(User.username == data.username)
     user = (await session.execute(stmt)).scalar_one_or_none()
     if user is None or not verify_password(data.password, user.passwd_hash):
-        raise HTTPException(
-            status_code=422, detail={c.WORD_MESSAGE: "Invalid credentials"}
+        raise AppException(
+            status=422, payload={c.WORD_MESSAGE: "Invalid credentials"}
         )
     token = create_token({c.WORD_ID: user.id, c.WORD_USERNAME: user.username})
     return {"token": token}

@@ -1,9 +1,9 @@
-from fastapi import HTTPException
-from starlette import status
+from typing import Optional, Union
 
 
-def unprocessable_entities(errors: list):
-    raise HTTPException(
-        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-        detail=errors,
-    )
+class AppException(Exception):
+    def __init__(
+        self, status: int, payload: Optional[Union[list, dict]] = None
+    ):
+        self.status = status
+        self.payload = payload
